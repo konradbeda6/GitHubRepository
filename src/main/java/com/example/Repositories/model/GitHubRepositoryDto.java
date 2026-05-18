@@ -2,7 +2,8 @@ package com.example.Repositories.model;
 
 import java.time.LocalDateTime;
 
-public record RepositoryDto(
+public record GitHubRepositoryDto(
+        Long id,
         String fullName,
         String description,
         String cloneUrl,

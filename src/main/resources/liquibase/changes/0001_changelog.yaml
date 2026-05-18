@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Konrad
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: patients
+      changes:
+        - createTable:
+            tableName: repositories
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: owner
+                  type: varchar(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: repository_name
+                  type: varchar(250)
+                constraints:
+                  nullable: false
+              - column:
+                  name: full_name
+                  type: varchar(250)
+                constraints:
+                  nullable: false
+              - column:
+                  name: description
+                  type: varchar(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: clone_url
+                  type: varchar(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: watchers
+                  type: varchar(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false

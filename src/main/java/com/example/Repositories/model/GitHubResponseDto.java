@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 public record GitHubResponseDto(
+        OwnerDto owner,
+        @JsonProperty("name")
+        String repositoryName,
         @JsonProperty("full_name")
         String fullName,
         String description,

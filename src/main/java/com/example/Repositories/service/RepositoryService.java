@@ -3,8 +3,10 @@ package com.example.Repositories.service;
 import com.example.Repositories.client.RepositoryClient;
 import com.example.Repositories.exception.RepositoryNotFoundException;
 import com.example.Repositories.mapper.RepositoryMapper;
+import com.example.Repositories.model.GitHubRepository;
+import com.example.Repositories.model.GitHubRepositoryDto;
 import com.example.Repositories.model.GitHubResponseDto;
-import com.example.Repositories.model.RepositoryDto;
+import com.example.Repositories.repository.GitHubJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,11 +17,20 @@ import org.springframework.stereotype.Service;
 public class RepositoryService {
     private final RepositoryClient repositoryClient;
     private final RepositoryMapper repositoryMapper;
+    private final GitHubJpaRepository jpaRepository;
 
-    public RepositoryDto getRepository(String owner, String repositoryName) {
+    public GitHubRepositoryDto getRepository(String owner, String repositoryName) {
         log.info("Fetching the owner repository named: owner={}", owner);
-        GitHubResponseDto repo = repositoryClient.getRepo(owner, repositoryName);
+        GitHubRepository localRepo = jpaRepository.findByOwnerAndRepositoryName(owner, repositoryName)
+                .orElseThrow(RepositoryNotFoundException::new);
+        return repositoryMapper.toDto(localRepo);
+    }
 
-        return repositoryMapper.toRepositoryDto(repo);
+    public GitHubRepositoryDto createRepository(String owner, String repositoryName) {
+        log.info("Saving the owner repository in local dataBase: owner={}", owner);
+        GitHubResponseDto repo = repositoryClient.getRepo(owner, repositoryName);
+        GitHubRepository entityRepository = repositoryMapper.toEntity(repo);
+        GitHubRepository savedRepository = jpaRepository.save(entityRepository);
+        return repositoryMapper.toDto(savedRepository);
     }
 }
