@@ -13,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Repositories", description = "Operations related to repositories ")
 @Slf4j
@@ -53,5 +50,37 @@ public class RepositoryController {
         GitHubRepositoryDto gitHubRepositoryDto = repositoryService.createRepository(owner, repositoryName);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(gitHubRepositoryDto);
+    }
+
+    @Operation(summary = "Update repository")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Repository updated"),
+            @ApiResponse(responseCode = "404", description = "Repository not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @PutMapping("/repositories/{owner}/{repositoryName}")
+    public ResponseEntity<GitHubRepositoryDto> updateRepository(@PathVariable String owner, @PathVariable String repositoryName) {
+        log.info("Updating repository in local dataBase request: repositoryOwner={}, repositoryName={}", owner, repositoryName);
+
+
+        GitHubRepositoryDto gitHubRepositoryDto = repositoryService.updateRepository(owner, repositoryName);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(gitHubRepositoryDto);
+    }
+
+    @Operation(summary = "Delete repository")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Repository deleted"),
+            @ApiResponse(responseCode = "404", description = "Repository not found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @DeleteMapping("/repositories/{owner}/{repositoryName}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRepository(@PathVariable String owner, @PathVariable String repositoryName) {
+        log.info("Deleting repository from local dataBase request: repositoryOwner={}, repositoryName={}", owner, repositoryName);
+
+        repositoryService.deleteRepository(owner, repositoryName);
     }
 }

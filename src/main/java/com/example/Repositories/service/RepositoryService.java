@@ -33,4 +33,22 @@ public class RepositoryService {
         GitHubRepository savedRepository = jpaRepository.save(entityRepository);
         return repositoryMapper.toDto(savedRepository);
     }
+
+    public GitHubRepositoryDto updateRepository(String owner, String repositoryName) {
+        log.info("Updating repository in local dataBase: owner={}, repositoryName={}", owner, repositoryName);
+        GitHubRepository repository = jpaRepository.findByOwnerAndRepositoryName(owner, repositoryName)
+                .orElseThrow(RepositoryNotFoundException::new);
+        GitHubResponseDto responseDto = repositoryClient.getRepo(owner, repositoryName);
+        repository.update(responseDto);
+        GitHubRepository savedRepository = jpaRepository.save(repository);
+        return repositoryMapper.toDto(savedRepository);
+    }
+
+    public void deleteRepository(String owner, String repositoryName) {
+        log.info("Deleting repository from local dataBase: owner={}, repositoryName={}", owner, repositoryName);
+
+        GitHubRepository repository = jpaRepository.findByOwnerAndRepositoryName(owner, repositoryName)
+                .orElseThrow(RepositoryNotFoundException::new);
+        jpaRepository.delete(repository);
+    }
 }

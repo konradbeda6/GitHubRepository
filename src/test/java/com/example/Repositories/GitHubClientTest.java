@@ -4,6 +4,9 @@ import com.example.Repositories.client.RepositoryClient;
 import com.example.Repositories.exception.InternalServerException;
 import com.example.Repositories.exception.RepositoryNotFoundException;
 import com.example.Repositories.model.GitHubResponseDto;
+import com.example.Repositories.model.OwnerDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -26,29 +29,21 @@ public class GitHubClientTest {
     @Autowired
     private RepositoryClient repositoryClient;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @AfterEach
     void resetWireMock() {
         WireMock.reset();
     }
 
     @Test
-    void getRepo_DataCorrect_ReturnRepository() {
+    void getRepo_DataCorrect_ReturnRepository() throws JsonProcessingException {
         //given
-        String responseBody = """
-                            {
-                              "owner": {
-                                "login": "octocat"
-                              },
-                              "name": "Hello-World",
-                              "full_name": "octocat/Hello-World",
-                              "description": "My first repository on GitHub!",
-                              "clone_url": "https://github.com/octocat/Hello-World.git",
-                              "watchers": 3572,
-                              "created_at": "2011-01-26T19:01:12"
-                            }
-                        """;
+        GitHubResponseDto responseDto = new GitHubResponseDto(new OwnerDto("octocat"), "Hello-World", "octocat/Hello-World", "My first repository on GitHub!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
+        String response = objectMapper.writeValueAsString(responseDto);
         stubFor(get(urlEqualTo("/repos/octocat/Hello-World"))
-                .willReturn(okJson(responseBody)));
+                .willReturn(okJson(response)));
         //when
         GitHubResponseDto result = repositoryClient.getRepo("octocat", "Hello-World");
         //then

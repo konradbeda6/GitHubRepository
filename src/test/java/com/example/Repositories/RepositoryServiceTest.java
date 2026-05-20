@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class RepositoryServiceTest {
@@ -58,7 +59,7 @@ public class RepositoryServiceTest {
     @Test
     void createRepository_DataCorrect_ReturnRepository() {
         //given
-        GitHubResponseDto responseDto = new GitHubResponseDto(new OwnerDto("octocat"), "Hello-@orld", "octocat/Hello-World", "My first repository on GitHub!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
+        GitHubResponseDto responseDto = new GitHubResponseDto(new OwnerDto("octocat"), "Hello-World", "octocat/Hello-World", "My first repository on GitHub!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
         GitHubRepository repository = new GitHubRepository(1L, "octocat", "Hello-World", "octocat/Hello-World", "My first repository on GitHub!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
         when(repositoryClient.getRepo("octocat", "Hello-World")).thenReturn(responseDto);
         when(jpaRepository.save(any(GitHubRepository.class))).thenReturn(repository);
@@ -81,7 +82,7 @@ public class RepositoryServiceTest {
         RepositoryNotFoundException exception = assertThrows(RepositoryNotFoundException.class, () -> repositoryService.getRepository("otocat", "Hello-World"));
         //then
         assertEquals("Repository not found", exception.getMessage());
-        assertEquals( HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
     }
 
     @Test
@@ -92,7 +93,38 @@ public class RepositoryServiceTest {
         RepositoryNotFoundException exception = assertThrows(RepositoryNotFoundException.class, () -> repositoryService.createRepository("otocat", "Hello-World"));
         //then
         assertEquals("Repository not found", exception.getMessage());
-        assertEquals( HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+    }
+
+    @Test
+    void updateRepository_DataCorrect_RepositoryUpdated() {
+        //given
+        GitHubRepository repository = new GitHubRepository(1L, "octocat", "Hello-World", "octocat/Hello-World", "My first repository on GitHub!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
+        GitHubResponseDto responseDto = new GitHubResponseDto(new OwnerDto("octocat"), "Hello-World", "octocat/Hello-World", "My first repository!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
+        when(jpaRepository.findByOwnerAndRepositoryName("octocat", "Hello-World")).thenReturn(Optional.of(repository));
+        when(jpaRepository.save(any(GitHubRepository.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repositoryClient.getRepo("octocat", "Hello-World")).thenReturn(responseDto);
+        //when
+        GitHubRepositoryDto repositoryDto = repositoryService.updateRepository("octocat", "Hello-World");
+        //then
+        assertEquals(1L, repositoryDto.id());
+        assertEquals("octocat/Hello-World", repositoryDto.fullName());
+        assertEquals("My first repository!", repositoryDto.description());
+        assertEquals("https://github.com/octocat/Hello-World.git", repositoryDto.cloneUrl());
+        assertEquals(3572L, repositoryDto.watchers());
+        assertEquals(LocalDateTime.of(2011, 1, 26, 19, 1, 12), repositoryDto.createdAt());
+    }
+
+    @Test
+    void deleteRepository_RepositoryExists_RepositoryDeleted() {
+        //given
+        GitHubRepository repository = new GitHubRepository(1L, "octocat", "Hello-World", "octocat/Hello-World", "My first repository on GitHub!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
+        when(jpaRepository.findByOwnerAndRepositoryName("octocat", "Hello-World")).thenReturn(Optional.of(repository));
+        //when
+        repositoryService.deleteRepository("octocat", "Hello-World");
+        //then
+        verify(jpaRepository).findByOwnerAndRepositoryName("octocat", "Hello-World");
+        verify(jpaRepository).delete(repository);
     }
 
 }

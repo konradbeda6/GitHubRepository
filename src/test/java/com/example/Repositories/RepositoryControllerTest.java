@@ -14,8 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,5 +78,30 @@ public class RepositoryControllerTest {
         //when&then
         mockMvc.perform(post("/repositories/{owner}/{repositoryName}", "octocat", "Hello-World"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateRepository_DataCorrect_ReturnRepository() throws Exception {
+        //given
+        GitHubRepositoryDto repositoryDto = new GitHubRepositoryDto(1L, "octocat/Hello-World", "My first repository!", "https://github.com/octocat/Hello-World.git", 3572L, LocalDateTime.of(2011, 1, 26, 19, 1, 12));
+        when(repositoryService.updateRepository("octocat", "Hello-World"))
+                .thenReturn(repositoryDto);
+
+        //when&then
+        mockMvc.perform(put("/repositories/{owner}/{repositoryName}", "octocat", "Hello-World"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.fullName").value("octocat/Hello-World"))
+                .andExpect(jsonPath("$.description").value("My first repository!"))
+                .andExpect(jsonPath("$.cloneUrl").value("https://github.com/octocat/Hello-World.git"))
+                .andExpect(jsonPath("$.watchers").value(3572))
+                .andExpect(jsonPath("$.createdAt").value("2011-01-26T19:01:12"));
+    }
+
+    @Test
+    void deleteRepository_RepositoryExists_Return204() throws Exception {
+        //when&then
+        mockMvc.perform(delete("/repositories/{owner}/{repositoryName}", "octocat", "Hello-World"))
+                .andExpect(status().isNoContent());
     }
 }

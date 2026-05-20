@@ -1,5 +1,6 @@
 package com.example.Repositories.model;
 
+import com.example.Repositories.exception.RepositoryNotFoundException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,4 +33,28 @@ public class GitHubRepository {
     private Long watchers;
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    public void update(GitHubResponseDto responseDto) {
+        if (responseDto.owner() != null) {
+            this.owner = responseDto.owner().login();
+        }
+        if (responseDto.repositoryName() != null) {
+            this.repositoryName = responseDto.repositoryName();
+        }
+        if (responseDto.fullName() != null) {
+            this.fullName = responseDto.fullName();
+        }
+        if (responseDto.description() != null) {
+            this.description = responseDto.description();
+        }
+        if (responseDto.cloneUrl() != null) {
+            this.cloneUrl = responseDto.cloneUrl();
+        }
+        if (responseDto.watchers() != null) {
+            this.watchers = responseDto.watchers();
+        }
+        if (responseDto.createdAt() != null) {
+            this.createdAt = responseDto.createdAt();
+        }
+    }
 }
