@@ -15,10 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
+import java.util.concurrent.CompletionException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -79,21 +81,24 @@ public class RepositoryServiceTest {
         //given
         when(jpaRepository.findByOwnerAndRepositoryName("otocat", "Hello-World")).thenReturn(Optional.empty());
         //when
-        RepositoryNotFoundException exception = assertThrows(RepositoryNotFoundException.class, () -> repositoryService.getRepository("otocat", "Hello-World"));
+        CompletionException exception = assertThrows(CompletionException.class, () -> repositoryService.getRepository("otocat", "Hello-World"));
+        RepositoryNotFoundException cause = assertInstanceOf(RepositoryNotFoundException.class, exception.getCause());
         //then
-        assertEquals("Repository not found", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals("Repository not found", cause.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, cause.getStatus());
     }
+
 
     @Test
     void createRepository_RepositoryNotFound_RepositoryNotFoundExceptionThrown() {
         //given
         when(repositoryClient.getRepo("otocat", "Hello-World")).thenThrow(new RepositoryNotFoundException());
         //when
-        RepositoryNotFoundException exception = assertThrows(RepositoryNotFoundException.class, () -> repositoryService.createRepository("otocat", "Hello-World"));
+        CompletionException exception = assertThrows(CompletionException.class, () -> repositoryService.createRepository("otocat", "Hello-World"));
+        RepositoryNotFoundException cause = assertInstanceOf(RepositoryNotFoundException.class, exception.getCause());
         //then
-        assertEquals("Repository not found", exception.getMessage());
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+        assertEquals("Repository not found", cause.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, cause.getStatus());
     }
 
     @Test
